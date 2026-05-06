@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thiranex | Monthly Reports</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- PDF & Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        .report-header {
+            background: white;
+            padding: 24px;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+        .summary-card {
+            background: white;
+            padding: 24px;
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+        .summary-card h4 {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+        .method-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .method-row:last-child { border-bottom: none; }
+        .method-name { font-weight: 500; color: var(--text-main); }
+        .method-value { font-weight: 600; color: var(--primary); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon"><i data-lucide="shield-check"></i></div>
+                <h1>Thiranex</h1>
+                <button id="sidebarCollapse">
+                    <i data-lucide="chevron-left"></i>
+                </button>
+            </div>
+            <nav class="main-nav">
+                <a href="index.html" class="nav-item">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="index.html#unverified" class="nav-item">
+                    <i data-lucide="clock"></i>
+                    <span>Unverified</span>
+                </a>
+                <a href="index.html#approved" class="nav-item">
+                    <i data-lucide="check-circle"></i>
+                    <span>Approved</span>
+                </a>
+                <a href="index.html#refunded" class="nav-item">
+                    <i data-lucide="rotate-ccw"></i>
+                    <span>Refunded</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i data-lucide="settings"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="reports.html" class="nav-item active">
+                    <i data-lucide="file-text"></i>
+                    <span>Reports</span>
+                </a>
+            </nav>
+        </aside>
+
+        <script type="module" src="auth_check.js"></script>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <button id="menuToggle" class="menu-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                <div style="flex: 1;"></div>
+                <div class="user-profile" id="adminDropdownTrigger">
+                    <div class="avatar">AD</div>
+                    <div class="admin-info">
+                        <span class="badge">Super Admin</span>
+                    </div>
+                    <i data-lucide="chevron-down" style="width: 16px; color: var(--text-dim);"></i>
+                    <div class="admin-dropdown hidden" id="adminDropdown">
+                        <div class="dropdown-header">
+                            <strong>Administrator</strong>
+                            <span>admin@thiranex.com</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <button id="logoutBtn" class="dropdown-item">
+                            <i data-lucide="log-out"></i>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <section class="dashboard-header">
+                <div class="welcome">
+                    <h2 style="font-family: 'Outfit', sans-serif;">Monthly Reports</h2>
+                    <p>Deep-dive into transaction data and financial metrics.</p>
+                </div>
+            </section>
+
+            <div class="report-header">
+                <div style="display: flex; gap: 16px; align-items: center;">
+                    <input type="month" id="monthPicker" style="padding: 10px 16px; border-radius: 12px; border: 1px solid var(--border-light); outline: none;">
+                    <button id="generateBtn" class="btn btn-primary">
+                        Generate Report
+                    </button>
+                </div>
+                <button id="exportReportBtn" class="btn btn-secondary">
+                    <i data-lucide="download"></i> Export Excel
+                </button>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h4>Status Breakdown</h4>
+                    <div class="method-row">
+                        <span class="method-name">Total Approved</span>
+                        <span class="method-value" id="sumApproved">₹0.00</span>
+                    </div>
+                    <div class="method-row">
+                        <span class="method-name">Total Pending</span>
+                        <span class="method-value" id="sumPending" style="color: var(--warning);">₹0.00</span>
+                    </div>
+                    <div class="method-row">
+                        <span class="method-name">Total Refunded</span>
+                        <span class="method-value" id="sumRefunded" style="color: var(--danger);">₹0.00</span>
+                    </div>
+                </div>
+                <div class="summary-card">
+                    <h4>Category Insights</h4>
+                    <div id="methodBreakdown">
+                        <p style="color: var(--text-muted); font-size: 14px;">Select a month to see category data.</p>
+                    </div>
+                </div>
+            </div>
+
+            <section class="table-container">
+                <table id="reportTable">
+                    <thead>
+                        <tr>
+                            <th>Payer Name</th>
+                            <th>Transaction ID</th>
+                            <th>Method</th>
+                            <th>Rule/Note</th>
+                            <th>Amount</th>
+                            <th>Date & Time</th>
+                            <th>Status</th>
+                        </tr>
+
+                    </thead>
+                    <tbody id="reportTableBody">
+                        <!-- Data injected here -->
+                    </tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script type="module" src="reports.js"></script>
+    <script>lucide.createIcons();</script>
+</body>
+</html>

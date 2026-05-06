@@ -1,0 +1,68 @@
+/* --- Sidebar Core --- */
+.sidebar {
+    width: var(--sidebar-width);
+    background: var(--bg-surface);
+    border-right: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    z-index: 1000;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: visible; /* Important for the floating button */
+}
+
+/* Floating Toggle Button - ENHANCED */
+#sidebarCollapse {
+    position: absolute;
+    right: -16px;
+    top: 32px;
+    width: 32px; /* Larger click area */
+    height: 32px;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 10000; /* Stays on top */
+    transition: all 0.2s ease;
+    color: var(--primary);
+    padding: 0;
+}
+
+#sidebarCollapse:hover {
+    background: var(--primary);
+    color: white;
+    transform: scale(1.1);
+}
+
+#sidebarCollapse i {
+    width: 18px;
+    height: 18px;
+}
+
+/* --- Collapsed State --- */
+body.sidebar-collapsed .sidebar {
+    width: 80px;
+    padding: 24px 12px;
+}
+
+body.sidebar-collapsed .sidebar h1,
+body.sidebar-collapsed .sidebar .nav-item span,
+body.sidebar-collapsed .sidebar .sidebar-footer span,
+body.sidebar-collapsed .sidebar .admin-info {
+    display: none !important;
+}
+
+body.sidebar-collapsed .sidebar .logo-area,
+body.sidebar-collapsed .sidebar .nav-item {
+    justify-content: center;
+    padding: 12px 0;
+}
+
+body.sidebar-collapsed .sidebar .logo-icon {
+    margin: 0;
+}
