@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayConf | Managed by Thiranex</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <meta name="description" content="Secure and efficient payment verification portal for cross-checking online transactions.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="logo.png">
+    
+    <!-- Icons (Lucide) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- SheetJS for Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <div id="sidebarOverlay" class="sidebar-overlay"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <img src="logo.png" alt="Logo" style="width: 100%; border-radius: 6px;">
+                </div>
+                <div class="logo-text-group">
+                    <h1 style="font-size: 20px;">PayConf</h1>
+                    <span style="font-size: 10px; color: var(--text-dim); opacity: 0.8; font-weight: 500;">Managed by Thiranex</span>
+                </div>
+            </div>
+            
+            <button id="sidebarCollapse">
+                <i data-lucide="chevron-left"></i>
+            </button>
+
+            
+            <nav class="main-nav">
+                <a href="#" class="nav-item active" id="navDashboard">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" id="navUnverified">
+                    <i data-lucide="clock"></i>
+                    <span>Unverified</span>
+                </a>
+                <a href="#" class="nav-item" id="navApproved">
+                    <i data-lucide="check-circle"></i>
+                    <span>Approved</span>
+                </a>
+                <a href="#" class="nav-item" id="navRefunded">
+                    <i data-lucide="rotate-ccw"></i>
+                    <span>Refunded</span>
+                </a>
+                <a href="settings.html" class="nav-item" id="navSettings">
+                    <i data-lucide="settings"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="reports.html" class="nav-item" id="navReports">
+                    <i data-lucide="file-text"></i>
+                    <span>Reports</span>
+                </a>
+                <a href="verify.html" class="nav-item">
+                    <i data-lucide="search"></i>
+                    <span>Verify TxID</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button id="uploadTrigger" class="btn btn-primary">
+                    <i data-lucide="upload-cloud"></i>
+                    <span>Upload CSV</span>
+                </button>
+                <input type="file" id="excelInput" accept=".csv, .xlsx, .xls" hidden>
+                
+                <!-- Install App Button -->
+                <button id="installApp" class="btn btn-secondary hidden" style="margin-top: 12px; width: 100%; border-color: var(--primary); color: var(--primary);">
+                    <i data-lucide="download-cloud"></i>
+                    <span>Download App</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Script for Authentication -->
+        <script type="module" src="auth_check.js"></script>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-bar">
+                <button id="menuToggle" class="menu-toggle">
+                    <i data-lucide="menu"></i>
+                </button>
+                
+                <div style="flex: 1;"></div> <!-- Spacer -->
+
+                <div class="user-profile" id="adminDropdownTrigger">
+                    <div class="avatar">AD</div>
+                    <div class="admin-info">
+                        <span class="badge">Super Admin</span>
+                    </div>
+                    <i data-lucide="chevron-down" style="width: 16px; color: var(--text-dim);"></i>
+
+                    <!-- Dropdown Menu -->
+                    <div class="admin-dropdown hidden" id="adminDropdown">
+                        <div class="dropdown-header">
+                            <strong>Administrator</strong>
+                            <span>admin@thiranex.com</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <button id="vanishBtn" class="dropdown-item text-danger">
+                            <i data-lucide="trash-2"></i>
+                            Vanish All Data
+                        </button>
+                        <div class="dropdown-divider"></div>
+                        <button id="logoutBtn" class="dropdown-item">
+                            <i data-lucide="log-out"></i>
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <section class="dashboard-header">
+                <div class="welcome">
+                    <h2>Payment Overview</h2>
+                    <p>Real-time transaction tracking and verification.</p>
+                </div>
+                <div class="date-range">
+                    <span id="currentDate">Loading...</span>
+                </div>
+            </section>
+
+            <!-- Stats Row -->
+            <section class="stats-grid">
+                <div class="stat-card total">
+                    <div class="stat-icon"><i data-lucide="banknote"></i></div>
+                    <div class="stat-info">
+                        <span class="label">Total Received</span>
+                        <h3 id="totalAmount">₹0.00</h3>
+                    </div>
+                </div>
+                <div class="stat-card approved">
+                    <div class="stat-icon"><i data-lucide="check-circle"></i></div>
+                    <div class="stat-info">
+                        <span class="label">Approved</span>
+                        <h3 id="approvedAmount">₹0.00</h3>
+                        <p class="sub-label"><span id="approvedCount">0</span> transactions</p>
+                    </div>
+                </div>
+                <div class="stat-card pending">
+                    <div class="stat-icon"><i data-lucide="clock"></i></div>
+                    <div class="stat-info">
+                        <span class="label">Pending Verification</span>
+                        <h3 id="pendingAmount">₹0.00</h3>
+                        <p class="sub-label"><span id="pendingCount">0</span> transactions</p>
+                    </div>
+                </div>
+                <div class="stat-card refunded">
+                    <div class="stat-icon"><i data-lucide="rotate-ccw"></i></div>
+                    <div class="stat-info">
+                        <span class="label">Refunded</span>
+                        <h3 id="refundedAmount">₹0.00</h3>
+                        <p class="sub-label"><span id="refundedCount">0</span> transactions</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filters & Actions -->
+            <section class="table-controls">
+                <div class="filter-group">
+                    <!-- Moved Search Box Here -->
+                    <div class="search-box">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="globalSearch" placeholder="Search by TxID or Payer...">
+                    </div>
+
+
+                    <select id="noteFilter">
+                        <option value="all">Filter by Rule (All)</option>
+                    </select>
+
+                    <select id="typeFilter">
+                        <option value="all">All Types</option>
+                        <option value="UPI">UPI</option>
+                        <option value="UPI CC">UPI CC</option>
+                    </select>
+
+                    <select id="statusFilter">
+
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="refunded">Refunded</option>
+                    </select>
+
+                    <select id="noteFilter">
+                        <option value="all">All Notes</option>
+                        <!-- Dynamic notes will be added here -->
+                    </select>
+                </div>
+
+                <div class="export-actions">
+                    <button class="btn btn-secondary" id="exportBtn">
+                        <i data-lucide="download"></i>
+                        Export
+                    </button>
+                </div>
+            </section>
+
+            <!-- Data Table -->
+            <section class="table-container">
+                <table id="transactionTable">
+                    <thead>
+                        <tr>
+                            <th>Payer</th>
+                            <th>Transaction ID</th>
+                            <th>Method</th>
+                            <th>Date & Time</th>
+                            <th>Note</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Data will be injected here -->
+                    </tbody>
+                </table>
+                <div id="emptyState" class="empty-state hidden">
+                    <i data-lucide="database"></i>
+                    <p>No transactions found. Upload an Excel file to get started.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Custom Modal -->
+    <div id="customModal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-icon" id="modalIcon">
+                <i data-lucide="alert-triangle"></i>
+            </div>
+            <h3 id="modalTitle">Confirm Action</h3>
+            <p id="modalMessage">Are you sure you want to proceed?</p>
+            
+            <div id="modalInputContainer" class="hidden">
+                <input type="text" id="modalInput" placeholder="Type here...">
+            </div>
+
+            <div class="modal-actions">
+                <button id="modalCancel" class="btn btn-secondary">Cancel</button>
+                <button id="modalConfirm" class="btn btn-primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module" src="app.js"></script>
+    <script>
+        lucide.createIcons();
+        
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW Registered'))
+                    .catch(err => console.log('SW Registration Failed', err));
+            });
+        }
+    </script>
+</body>
+</html>
