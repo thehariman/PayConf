@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Payment | PayConf</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="payconf_app_icon.png">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Auth Check -->
+    <script type="module" src="auth_check.js"></script>
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --primary-glow: rgba(37, 99, 235, 0.15);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-body: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: var(--bg-body);
+            background-image: 
+                radial-gradient(at 0% 0%, #eff6ff 0, transparent 50%), 
+                radial-gradient(at 100% 0%, #eff6ff 0, transparent 50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .verify-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 48px;
+            border-radius: 32px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+            animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes cardIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .logo-area {
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            border-radius: 16px;
+            margin: 0 auto 20px auto;
+            padding: 10px;
+            box-shadow: 0 10px 15px -3px var(--primary-glow);
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            color: var(--text-main);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .brand-subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 32px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 18px 20px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            font-size: 16px;
+            color: var(--text-main);
+            transition: all 0.3s;
+            outline: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 20px;
+        }
+
+        .btn-verify {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 18px;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 15px -3px var(--primary-glow);
+        }
+
+        .btn-verify:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-verify:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #resultArea {
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status-box {
+            padding: 24px;
+            border-radius: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .status-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px auto;
+        }
+
+        .status-approved { background: #f0fdf4; color: var(--success); border: 1px solid #dcfce7; }
+        .status-pending { background: #fffbeb; color: var(--warning); border: 1px solid #fef3c7; }
+        .status-notfound { background: #fef2f2; color: var(--danger); border: 1px solid #fee2e2; }
+
+        .status-title {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 4px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .status-desc {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .details-grid {
+            text-align: left;
+            display: grid;
+            gap: 14px;
+            background: rgba(0,0,0,0.02);
+            padding: 20px;
+            border-radius: 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+        }
+
+        .detail-item span { color: var(--text-muted); }
+        .detail-item strong { color: var(--text-main); font-weight: 600; }
+
+        .btn-approve {
+            background: var(--success);
+            margin-top: 24px;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+        }
+        .btn-approve:hover {
+            background: #059669;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 32px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .back-link:hover { color: var(--primary); }
+
+        .loader {
+            display: none;
+            width: 22px;
+            height: 22px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+    <script type="module" src="auth_check.js"></script>
+</head>
+<body>
+    <div class="verify-card">
+        <div class="logo-area" style="margin-bottom: 24px;">
+            <div class="logo-icon">
+                <img src="logo.png" alt="Logo" style="width: 100%; border-radius: 12px;">
+            </div>
+            <h1 style="font-size: 24px;">Verify Payment</h1>
+        </div>
+
+        <div class="input-group">
+            <input type="text" id="txIdInput" placeholder="Enter Transaction ID..." autocomplete="off">
+        </div>
+
+        <button id="verifyBtn" class="btn-verify">
+            <span class="btn-text">Verify Payment</span>
+            <div class="loader" id="loader"></div>
+        </button>
+
+        <div id="resultArea">
+            <div id="statusBox" class="status-box">
+                <div class="status-icon" id="statusIcon"></div>
+                <div class="status-title" id="statusTitle"></div>
+                <div class="status-desc" id="statusDesc"></div>
+            </div>
+
+            <div class="details-grid" id="detailsGrid">
+                <div class="detail-item">
+                    <span>Payer Name:</span>
+                    <strong id="resPayer">--</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Amount:</span>
+                    <strong id="resAmount">--</strong>
+                </div>
+                <div class="detail-item">
+                    <span>Date:</span>
+                    <strong id="resDate">--</strong>
+                </div>
+            </div>
+
+            <button id="approveBtn" class="btn-verify btn-approve" style="display: none;">
+                <i data-lucide="check-circle"></i>
+                Approve Payment Now
+            </button>
+        </div>
+
+        <a href="index.html" class="back-link">
+            <i data-lucide="arrow-left" style="width: 16px;"></i>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { firebaseConfig } from "./firebase_config.js";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const input = document.getElementById('txIdInput');
+        const btn = document.getElementById('verifyBtn');
+        const loader = document.getElementById('loader');
+        const btnText = btn.querySelector('.btn-text');
+        const resultArea = document.getElementById('resultArea');
+
+        btn.onclick = async () => {
+            const txId = input.value.trim();
+            if (!txId) return;
+
+            // UI Loading state
+            btn.disabled = true;
+            loader.style.display = 'block';
+            btnText.style.opacity = '0';
+            resultArea.style.display = 'none';
+
+            try {
+                const docRef = doc(db, "transactions", txId);
+                const docSnap = await getDoc(docRef);
+
+                resultArea.style.display = 'block';
+                const statusBox = document.getElementById('statusBox');
+                const statusIcon = document.getElementById('statusIcon');
+                const statusTitle = document.getElementById('statusTitle');
+                const statusDesc = document.getElementById('statusDesc');
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById('detailsGrid').style.display = 'grid';
+                    approveBtn.style.display = 'none';
+                    
+                    // Populate details
+                    document.getElementById('resPayer').innerText = data.payer;
+                    document.getElementById('resAmount').innerText = `₹${data.amount.toLocaleString()}`;
+                    document.getElementById('resDate').innerText = new Date(data.creationTime).toLocaleDateString('en-GB', {
+                        day: '2-digit', month: 'short', year: 'numeric'
+                    });
+
+                    // Set Status UI
+                    statusBox.className = 'status-box';
+                    if (data.status === 'approved') {
+                        statusBox.classList.add('status-approved');
+                        statusIcon.innerHTML = '<i data-lucide="check-circle" style="width: 32px; height: 32px;"></i>';
+                        statusTitle.innerText = "Payment Verified";
+                        statusDesc.innerText = "This transaction is already approved.";
+                    } else if (data.status === 'pending') {
+                        statusBox.classList.add('status-pending');
+                        statusIcon.innerHTML = '<i data-lucide="clock" style="width: 32px; height: 32px;"></i>';
+                        statusTitle.innerText = "Verification Pending";
+                        statusDesc.innerText = "Data found. Ready for administrative approval.";
+                        approveBtn.style.display = 'flex';
+                        approveBtn.disabled = false;
+                        approveBtn.innerHTML = '<i data-lucide="check-circle"></i> Approve Payment Now';
+                    } else if (data.status === 'refunded') {
+                        statusBox.classList.add('status-notfound');
+                        statusIcon.innerHTML = '<i data-lucide="rotate-ccw" style="width: 32px; height: 32px;"></i>';
+                        statusTitle.innerText = "Payment Refunded";
+                        statusDesc.innerText = "This transaction has been reversed/refunded.";
+                    }
+                } else {
+                    statusBox.className = 'status-box status-notfound';
+                    statusIcon.innerHTML = '<i data-lucide="alert-circle" style="width: 32px; height: 32px;"></i>';
+                    statusTitle.innerText = "Not Found";
+                    statusDesc.innerText = "No record matches this Transaction ID.";
+                    document.getElementById('detailsGrid').style.display = 'none';
+                    approveBtn.style.display = 'none';
+                }
+
+                lucide.createIcons();
+            } catch (error) {
+                console.error(error);
+                alert("An error occurred during verification.");
+            } finally {
+                btn.disabled = false;
+                loader.style.display = 'none';
+                btnText.style.opacity = '1';
+            }
+        };
+
+        const approveBtn = document.getElementById('approveBtn');
+        approveBtn.onclick = async () => {
+            const txId = input.value.trim();
+            if (!txId) return;
+
+            approveBtn.disabled = true;
+            approveBtn.innerText = "Approving...";
+
+            try {
+                await updateDoc(doc(db, "transactions", txId), {
+                    status: 'approved'
+                });
+                // Re-verify to update UI
+                btn.click();
+            } catch (error) {
+                alert("Approval failed.");
+                approveBtn.disabled = false;
+                approveBtn.innerHTML = '<i data-lucide="check-circle"></i> Approve Payment Now';
+                lucide.createIcons();
+            }
+        };
+
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') btn.click();
+        });
+
+        lucide.createIcons();
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW Registered'))
+                    .catch(err => console.log('SW Registration Failed', err));
+            });
+        }
+    </script>
+</body>
+</html>
